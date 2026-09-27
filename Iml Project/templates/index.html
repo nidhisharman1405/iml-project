@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EnergySight AI — UCI Energy Efficiency Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Top Navigation Header -->
+      <header class="navbar">
+        <div class="brand-section">
+          <div class="brand-icon">⚡</div>
+          <div class="brand-text">
+            <h1>EnergySight AI</h1>
+            <p>Building Energy Efficiency & Thermal Load Intelligence</p>
+          </div>
+        </div>
+
+        <div class="nav-badges">
+          <a
+            href="https://archive.ics.uci.edu/dataset/242/energy+efficiency"
+            target="_blank"
+            class="badge-tag highlight"
+          >
+            <span>📁</span> Dataset: UCI #242 (768 Buildings)
+          </a>
+          <span class="badge-tag live">
+            <span class="live-dot"></span>
+            Gradient Boosting (R² = 99.2%)
+          </span>
+          <a href="/api/export-dataset" class="badge-tag" download>
+            <span>📥</span> Download Dataset CSV
+          </a>
+        </div>
+      </header>
+
+      <!-- Navigation Tabs -->
+      <nav class="tabs-bar">
+        <button class="tab-btn active" data-tab="tab-simulator">
+          <span>🎯</span> Interactive Simulator
+        </button>
+        <button class="tab-btn" data-tab="tab-models">
+          <span>📊</span> Model Benchmarks
+        </button>
+        <button class="tab-btn" data-tab="tab-importance">
+          <span>📈</span> Feature Drivers
+        </button>
+        <button class="tab-btn" data-tab="tab-batch">
+          <span>📁</span> Batch Predictor
+        </button>
+        <button class="tab-btn" data-tab="tab-about">
+          <span>ℹ️</span> Dataset & Methodology
+        </button>
+      </nav>
+
+      <!-- TAB 1: Live Interactive Simulator -->
+      <main id="tab-simulator" class="tab-view active">
+        <div class="simulator-layout">
+          <!-- LEFT COLUMN: Building Inputs & Context -->
+          <div class="panel">
+            <div class="panel-title-row">
+              <h2><span>📐</span> Building Design Parameters</h2>
+              <span class="control-unit">8 Architectural Features</span>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="quick-presets-section">
+              <p class="section-caption">Archetype Presets</p>
+              <div id="presetPills" class="preset-pills"></div>
+            </div>
+
+            <!-- Ground Truth Verification Dropdown -->
+            <div class="benchmark-box">
+              <label for="benchmarkSelect">
+                <span>🎯</span> Verify Against Real Benchmark Building:
+              </label>
+              <select id="benchmarkSelect">
+                <option value="">-- Choose a benchmark building --</option>
+              </select>
+            </div>
+
+            <!-- Verification Alert Banner -->
+            <div id="groundTruthBanner" class="ground-truth-banner"></div>
+
+            <!-- Continuous Dimension Sliders -->
+            <div class="controls-grid">
+              <!-- X1: Relative Compactness -->
+              <div class="control-card">
+                <div class="control-header">
+                  <span class="control-label">
+                    Relative Compactness
+                    <span class="control-code">X1</span>
+                  </span>
+                  <span class="control-unit">ratio</span>
+                </div>
+                <div class="slider-input-group">
+                  <input
+                    type="range"
+                    id="slider-X1"
+                    class="range-slider"
+                    min="0.62"
+                    max="0.98"
+                    step="0.01"
+                    value="0.76"
+                  />
+                  <input
+                    type="number"
+                    id="num-X1"
+                    class="range-number"
+                    min="0.62"
+                    max="0.98"
+                    step="0.01"
+                    value="0.76"
+                  />
+                </div>
+              </div>
+
+              <!-- X2: Surface Area -->
+              <div class="control-card">
+                <div class="control-header">
+                  <span class="control-label">
+                    Surface Area
+                    <span class="control-code">X2</span>
+                  </span>
+                  <span class="control-unit">m²</span>
+                </div>
+                <div class="slider-input-group">
+                  <input
+                    type="range"
+                    id="slider-X2"
+                    class="range-slider"
+                    min="514.5"
+                    max="808.5"
+                    step="0.5"
+                    value="661.5"
+                  />
+                  <input
+                    type="number"
+                    id="num-X2"
+                    class="range-number"
+                    min="514.5"
+                    max="808.5"
+                    step="0.5"
+                    value="661.5"
+                  />
+                </div>
+              </div>
+
+              <!-- X3: Wall Area -->
+              <div class="control-card">
+                <div class="control-header">
+                  <span class="control-label">
+                    Wall Area
+                    <span class="control-code">X3</span>
+                  </span>
+                  <span class="control-unit">m²</span>
+                </div>
+                <div class="slider-input-group">
+                  <input
+                    type="range"
+                    id="slider-X3"
+                    class="range-slider"
+                    min="245.0"
+                    max="416.5"
+                    step="0.5"
+                    value="416.5"
+                  />
+                  <input
+                    type="number"
+                    id="num-X3"
+                    class="range-number"
+                    min="245.0"
+                    max="416.5"
+                    step="0.5"
+                    value="416.5"
+                  />
+                </div>
+              </div>
+
+              <!-- X4: Roof Area -->
+              <div class="control-card">
+                <div class="control-header">
+                  <span class="control-label">
+                    Roof Area
+                    <span class="control-code">X4</span>
+                  </span>
+                  <span class="control-unit">m²</span>
+                </div>
+                <div class="slider-input-group">
+                  <input
+                    type="range"
+                    id="slider-X4"
+                    class="range-slider"
+                    min="110.25"
+                    max="220.5"
+                    step="0.25"
+                    value="122.5"
+                  />
+                  <input
+                    type="number"
+                    id="num-X4"
+                    class="range-number"
+                    min="110.25"
+                    max="220.5"
+                    step="0.25"
+                    value="122.5"
+                  />
+                </div>
+              </div>
+
+              <!-- X5: Overall Height -->
+              <div class="control-card">
+                <div class="control-header">
+                  <span class="control-label">
+                    Overall Height
+                    <span class="control-code">X5</span>
+                  </span>
+                  <span class="control-unit">m</span>
+                </div>
+                <div class="segmented-group">
+                  <button type="button" class="segment-btn" data-group="X5" data-val="3.5">
+                    3.5m (1-Story)
+                  </button>
+                  <button type="button" class="segment-btn active" data-group="X5" data-val="7.0">
+                    7.0m (2-Story)
+                  </button>
+                </div>
+              </div>
+
+              <!-- X6: Orientation -->
+              <div class="control-card">
+                <div class="control-header">
+                  <span class="control-label">
+                    Orientation
+                    <span class="control-code">X6</span>
+                  </span>
+                  <span class="control-unit">cardinal</span>
+                </div>
+                <div class="segmented-group">
+                  <button type="button" class="segment-btn" data-group="X6" data-val="2">
+                    🧭 North (2)
+                  </button>
+                  <button type="button" class="segment-btn active" data-group="X6" data-val="3">
+                    🧭 East (3)
+                  </button>
+                  <button type="button" class="segment-btn" data-group="X6" data-val="4">
+                    🧭 South (4)
+                  </button>
+                  <button type="button" class="segment-btn" data-group="X6" data-val="5">
+                    🧭 West (5)
+                  </button>
+                </div>
+              </div>
+
+              <!-- X7: Glazing Area -->
+              <div class="control-card">
+                <div class="control-header">
+                  <span class="control-label">
+                    Glazing Area Ratio
+                    <span class="control-code">X7</span>
+                  </span>
+                  <span class="control-unit">ratio</span>
+                </div>
+                <div class="segmented-group">
+                  <button type="button" class="segment-btn" data-group="X7" data-val="0.0">
+                    0%
+                  </button>
+                  <button type="button" class="segment-btn" data-group="X7" data-val="0.10">
+                    10%
+                  </button>
+                  <button type="button" class="segment-btn active" data-group="X7" data-val="0.25">
+                    25%
+                  </button>
+                  <button type="button" class="segment-btn" data-group="X7" data-val="0.40">
+                    40%
+                  </button>
+                </div>
+              </div>
+
+              <!-- X8: Glazing Distribution -->
+              <div class="control-card">
+                <div class="control-header">
+                  <span class="control-label">
+                    Glazing Distribution
+                    <span class="control-code">X8</span>
+                  </span>
+                  <span class="control-unit">facade pattern</span>
+                </div>
+                <div class="segmented-group">
+                  <button type="button" class="segment-btn" data-group="X8" data-val="0">
+                    None (0)
+                  </button>
+                  <button type="button" class="segment-btn" data-group="X8" data-val="1">
+                    Uniform (1)
+                  </button>
+                  <button type="button" class="segment-btn active" data-group="X8" data-val="2">
+                    North (2)
+                  </button>
+                  <button type="button" class="segment-btn" data-group="X8" data-val="3">
+                    East (3)
+                  </button>
+                  <button type="button" class="segment-btn" data-group="X8" data-val="4">
+                    South (4)
+                  </button>
+                  <button type="button" class="segment-btn" data-group="X8" data-val="5">
+                    West (5)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Project Context & Model Engine -->
+            <div class="secondary-section">
+              <p class="section-caption">Environmental Context & ML Engine</p>
+              <div class="secondary-grid">
+                <div class="secondary-field">
+                  <label for="select-model_name">ML Algorithm</label>
+                  <select id="select-model_name">
+                    <option value="Gradient Boosting" selected>
+                      Gradient Boosting (99.2% R²)
+                    </option>
+                    <option value="Random Forest">Random Forest (98.0% R²)</option>
+                    <option value="Linear Regression">Linear Regression (90.3% R²)</option>
+                    <option value="Ridge Regression">Ridge Regression (89.8% R²)</option>
+                  </select>
+                </div>
+
+                <div class="secondary-field">
+                  <label for="select-project_type">Building Function</label>
+                  <select id="select-project_type">
+                    <option value="Residential" selected>Residential Home</option>
+                    <option value="Office">Commercial Office</option>
+                    <option value="School">School / Institution</option>
+                    <option value="Hospital">Hospital / Healthcare</option>
+                    <option value="Retail">Retail / Warehouse</option>
+                  </select>
+                </div>
+
+                <div class="secondary-field">
+                  <label for="select-climate_zone">Climate Zone</label>
+                  <select id="select-climate_zone">
+                    <option value="Temperate">Temperate</option>
+                    <option value="Cold" selected>Cold / Northern</option>
+                    <option value="Hot">Hot & Arid</option>
+                    <option value="Humid">Warm & Humid</option>
+                  </select>
+                </div>
+
+                <div class="secondary-field">
+                  <label for="select-insulation">Wall Insulation</label>
+                  <select id="select-insulation">
+                    <option value="Low">Low (Basic Cavity)</option>
+                    <option value="Medium">Medium (Code Min)</option>
+                    <option value="High" selected>High (Eco Standard)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar">
+              <label class="auto-calc-toggle">
+                <input type="checkbox" id="autoCalcToggle" checked />
+                <span>⚡ Live calculation on slider drag</span>
+              </label>
+
+              <div class="action-buttons">
+                <button type="button" id="btnReset" class="btn-outline">
+                  <span>↺</span> Reset
+                </button>
+                <button type="button" id="btnCalculate" class="btn-primary">
+                  <span>⚡</span> Calculate Energy Load
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Output Dashboard & Interactive 2.5D SVG -->
+          <div class="results-column">
+            <!-- Energy Rating Card -->
+            <div class="rating-card">
+              <div class="rating-top-row">
+                <div class="rating-title-block">
+                  <span>Energy Performance Standard</span>
+                  <h3 id="energyRatingTitle">High Efficiency Envelope</h3>
+                </div>
+                <div id="energyRatingBadge" class="grade-badge-huge badge-b">
+                  <span id="energyRatingGrade">B</span>
+                </div>
+              </div>
+              <p id="energyRatingDesc" class="rating-description">
+                Standard thermal performance with balanced heating and cooling characteristics.
+              </p>
+              <div class="rating-scale-bar">
+                <div class="scale-segment seg-a-plus" data-grade="A+"></div>
+                <div class="scale-segment seg-a" data-grade="A"></div>
+                <div class="scale-segment seg-b active-grade" data-grade="B"></div>
+                <div class="scale-segment seg-c" data-grade="C"></div>
+                <div class="scale-segment seg-d" data-grade="D"></div>
+                <div class="scale-segment seg-e" data-grade="E"></div>
+              </div>
+            </div>
+
+            <!-- Dual Metric Displays -->
+            <div class="metrics-dual-grid">
+              <!-- Heating Load Card (Y1) -->
+              <div class="metric-card heating-accent">
+                <div class="metric-card-top">
+                  <span class="metric-label">Heating Load (Y1)</span>
+                  <span class="metric-icon">🔥</span>
+                </div>
+                <div>
+                  <div class="metric-card-value">
+                    <span id="valHeating">--</span>
+                    <span class="metric-unit">kWh/m²</span>
+                  </div>
+                  <div class="metric-progress">
+                    <div id="barHeating" class="metric-bar-fill fill-orange" style="width: 50%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cooling Load Card (Y2) -->
+              <div class="metric-card cooling-accent">
+                <div class="metric-card-top">
+                  <span class="metric-label">Cooling Load (Y2)</span>
+                  <span class="metric-icon">❄️</span>
+                </div>
+                <div>
+                  <div class="metric-card-value">
+                    <span id="valCooling">--</span>
+                    <span class="metric-unit">kWh/m²</span>
+                  </div>
+                  <div class="metric-progress">
+                    <div id="barCooling" class="metric-bar-fill fill-cyan" style="width: 50%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Eco Strip: Carbon, Cost, Total Load -->
+            <div class="eco-strip">
+              <div class="eco-item">
+                <span>Total Annual Load</span>
+                <strong><span id="valTotal">--</span> kWh/m²</strong>
+              </div>
+              <div class="eco-item">
+                <span>Carbon Footprint</span>
+                <strong id="valCarbon">-- kg/m²</strong>
+              </div>
+              <div class="eco-item">
+                <span>Est. Energy Cost</span>
+                <strong id="valCost">-- /m²</strong>
+              </div>
+            </div>
+
+            <!-- Architectural 2.5D Isometric Visualizer -->
+            <div class="visualizer-card">
+              <div class="visualizer-header">
+                <h4><span>🏛️</span> Envelope Geometry Preview</h4>
+                <span id="valModelUsed" class="winner-tag">Gradient Boosting</span>
+              </div>
+              <div id="svgCanvas" class="svg-canvas-container"></div>
+              <div class="visualizer-legend">
+                <span id="legendStories">2 Floors (7.0m)</span>
+                <span id="legendOrientation">Orientation: East (90°)</span>
+              </div>
+            </div>
+
+            <!-- Recommendations Card -->
+            <div class="recommendations-card">
+              <h4><span>💡</span> Architectural Design Guidance</h4>
+              <ul id="recommendationsList" class="recommendations-list">
+                <li>Configure envelope parameters to generate custom efficiency guidance.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- TAB 2: Model Performance Benchmarks -->
+      <section id="tab-models" class="tab-view">
+        <div class="table-panel">
+          <h3>Algorithm Benchmark Comparison</h3>
+          <p>
+            Trained and cross-evaluated on the 768 building samples from the UCI Energy Efficiency
+            repository using an 80/20 train/test split.
+          </p>
+
+          <div class="comparison-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Model Algorithm</th>
+                  <th>R² Score (Y1 Heating)</th>
+                  <th>R² Score (Y2 Cooling)</th>
+                  <th>R² Overall Avg</th>
+                  <th>RMSE Avg (kWh/m²)</th>
+                  <th>MAE Avg (kWh/m²)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for model_name, m in metrics.items() %}
+                <tr class="{{ 'highlight-row' if model_name == default_model else '' }}">
+                  <td>
+                    <strong>{{ model_name }}</strong>
+                    {% if model_name == default_model %}
+                    <span class="winner-tag">★ Best Model</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ "%.4f"|format(m.r2_y1) }}</td>
+                  <td>{{ "%.4f"|format(m.r2_y2) }}</td>
+                  <td><strong>{{ "%.4f"|format(m.r2_avg) }}</strong></td>
+                  <td>{{ "%.4f"|format(m.rmse_avg) }}</td>
+                  <td>{{ "%.4f"|format(m.mae_avg) }}</td>
+                  <td>
+                    {% if model_name == default_model %}
+                    <span class="winner-tag">Active Production</span>
+                    {% else %}
+                    <span class="control-code">Selectable</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Feature Drivers / Importance -->
+      <section id="tab-importance" class="tab-view">
+        <div class="feature-importance-grid" id="featureImportanceContainer">
+          <div class="importance-card">
+            <h4>Heating Load (Y1) Impact Factors</h4>
+            <p>Relative importance of design features calculated via Gradient Boosting trees.</p>
+            <div id="heatingBars" class="importance-bars"></div>
+          </div>
+
+          <div class="importance-card">
+            <h4>Cooling Load (Y2) Impact Factors</h4>
+            <p>Relative importance of design features calculated via Gradient Boosting trees.</p>
+            <div id="coolingBars" class="importance-bars"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: Batch Predictor -->
+      <section id="tab-batch" class="tab-view">
+        <div class="batch-container">
+          <div class="table-panel">
+            <h3>Batch Energy Forecaster</h3>
+            <p>Upload a CSV file with columns X1 through X8 or run the built-in demo batch to predict loads across multiple building designs simultaneously.</p>
+
+            <div id="batchUploadBox" class="batch-upload-box">
+              <input type="file" id="batchFileInput" accept=".csv" style="display: none" />
+              <div style="font-size: 32px; margin-bottom: 8px">📂</div>
+              <h4>Click to Upload Building CSV</h4>
+              <p>Supports .csv files with headers X1, X2, X3, X4, X5, X6, X7, X8</p>
+              <button type="button" id="btnLoadSampleBatch" class="btn-primary" style="margin-top: 10px">
+                <span>⚡</span> Run Built-in Sample Batch (4 Buildings)
+              </button>
+            </div>
+
+            <div id="batchResultsTableContainer" style="display: none; margin-top: 24px">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px">
+                <h4>Batch Forecast Results</h4>
+                <button type="button" id="btnDownloadBatchCsv" class="btn-outline" style="display: none">
+                  <span>📥</span> Download Results CSV
+                </button>
+              </div>
+              <div class="comparison-table-wrapper">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>X1 (Compactness)</th>
+                      <th>X2 (Surface)</th>
+                      <th>X3 (Wall)</th>
+                      <th>X4 (Roof)</th>
+                      <th>X5 (Height)</th>
+                      <th>X6 (Orient)</th>
+                      <th>X7 (Glazing)</th>
+                      <th>X8 (Distrib)</th>
+                      <th>Heating (kWh)</th>
+                      <th>Cooling (kWh)</th>
+                      <th>Total Load</th>
+                      <th>Grade</th>
+                    </tr>
+                  </thead>
+                  <tbody id="batchTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: Dataset & Methodology -->
+      <section id="tab-about" class="tab-view">
+        <div class="table-panel">
+          <h3>About the UCI Energy Efficiency Dataset</h3>
+          <p>
+            This dataset was created by Angeliki Xifara and Athanasios Tsanas (University of Oxford)
+            using Ecotect to simulate the heating and cooling load of 768 residential buildings under
+            12 different building shapes.
+          </p>
+
+          <h4 style="margin: 20px 0 10px">Variables Dictionary</h4>
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Variable Name</th>
+                <th>Units</th>
+                <th>Domain Range</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>X1</strong></td>
+                <td>Relative Compactness</td>
+                <td>ratio</td>
+                <td>0.62 – 0.98</td>
+                <td>Volume to surface ratio compared to a reference cube</td>
+              </tr>
+              <tr>
+                <td><strong>X2</strong></td>
+                <td>Surface Area</td>
+                <td>m²</td>
+                <td>514.5 – 808.5</td>
+                <td>Total exterior surface area</td>
+              </tr>
+              <tr>
+                <td><strong>X3</strong></td>
+                <td>Wall Area</td>
+                <td>m²</td>
+                <td>245.0 – 416.5</td>
+                <td>Total vertical wall surface area</td>
+              </tr>
+              <tr>
+                <td><strong>X4</strong></td>
+                <td>Roof Area</td>
+                <td>m²</td>
+                <td>110.25 – 220.5</td>
+                <td>Total horizontal/inclined roof area</td>
+              </tr>
+              <tr>
+                <td><strong>X5</strong></td>
+                <td>Overall Height</td>
+                <td>m</td>
+                <td>3.5 or 7.0</td>
+                <td>3.5m (1-storey) or 7.0m (2-storey)</td>
+              </tr>
+              <tr>
+                <td><strong>X6</strong></td>
+                <td>Orientation</td>
+                <td>cardinal</td>
+                <td>2, 3, 4, 5</td>
+                <td>2: North, 3: East, 4: South, 5: West</td>
+              </tr>
+              <tr>
+                <td><strong>X7</strong></td>
+                <td>Glazing Area</td>
+                <td>fraction</td>
+                <td>0%, 10%, 25%, 40%</td>
+                <td>Window glazing percentage of floor area</td>
+              </tr>
+              <tr>
+                <td><strong>X8</strong></td>
+                <td>Glazing Area Distribution</td>
+                <td>category</td>
+                <td>0 – 5</td>
+                <td>0: None, 1: Uniform, 2: North, 3: East, 4: South, 5: West</td>
+              </tr>
+              <tr style="background: #fffbeb">
+                <td><strong>Y1</strong></td>
+                <td>Heating Load (Target)</td>
+                <td>kWh/m²</td>
+                <td>6.01 – 43.10</td>
+                <td>Annual thermal energy demand for heating</td>
+              </tr>
+              <tr style="background: #ecfeff">
+                <td><strong>Y2</strong></td>
+                <td>Cooling Load (Target)</td>
+                <td>kWh/m²</td>
+                <td>10.90 – 48.03</td>
+                <td>Annual thermal energy demand for cooling</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Client Script -->
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>

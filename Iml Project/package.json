@@ -1,0 +1,12 @@
+{
+  "name": "energy-efficiency-predictor",
+  "version": "1.0.0",
+  "description": "Professional energy efficiency predictor website with Node.js backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
